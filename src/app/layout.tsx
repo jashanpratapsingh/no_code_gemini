@@ -30,7 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}>
+      <body 
+        className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}
+        suppressHydrationWarning // Add this to handle attributes injected by browser extensions
+      >
         <AuthProvider>
           <Header />
           <main className="flex-1">{children}</main>
