@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,14 +10,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+let app: FirebaseApp | undefined = undefined;
+let authInstance: Auth | undefined = undefined;
+const googleProviderInstance = new GoogleAuthProvider(); // This can be initialized regardless
+
+if (!firebaseConfig.apiKey) {
+  console.error(
+    'Firebase API key is missing. Firebase will not be initialized. ' +
+    'Please check your .env file and ensure NEXT_PUBLIC_FIREBASE_API_KEY is set.'
+  );
 } else {
-  app = getApp();
+  try {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
+    }
+    authInstance = getAuth(app);
+  } catch (error) {
+    console.error('Firebase initialization failed:', error);
+    // app and authInstance will remain undefined, or Firebase services will not be functional.
+  }
 }
 
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-
-export { app, auth, googleProvider };
+export { app, authInstance as auth, googleProviderInstance as googleProvider };

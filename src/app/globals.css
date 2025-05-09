@@ -89,9 +89,9 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans);
+    font-family: var(--font-sans); /* Use Inter via --font-sans variable */
   }
   .font-mono {
-    font-family: var(--font-geist-mono);
+    font-family: theme('fontFamily.mono'); /* Use monospace stack from Tailwind config */
   }
 }

@@ -1,11 +1,10 @@
 // src/contexts/AuthContext.tsx
 "use client";
 import type { User } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
-import { onAuthStateChanged, signOut as firebaseSignOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth as firebaseAuthService, googleProvider as firebaseGoogleProvider } from '@/lib/firebase/config';
+import { onAuthStateChanged, signOut as firebaseSignOut, signInWithPopup } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { googleProvider } from '@/lib/firebase/config';
 
 interface AuthContextType {
   user: User | null;
@@ -22,32 +21,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    let unsubscribe: (() => void) | undefined;
+    if (firebaseAuthService) {
+      try {
+        unsubscribe = onAuthStateChanged(firebaseAuthService, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error("Error subscribing to onAuthStateChanged:", error);
+        setLoading(false);
+      }
+    } else {
+      console.error("Firebase auth service is not available. Firebase might not have initialized correctly. Auth features will be disabled.");
+      setLoading(false); 
+    }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!firebaseAuthService || !firebaseGoogleProvider) {
+      console.error("Firebase auth service or Google provider not available for sign-in.");
+      setLoading(false); // Ensure loading state is updated if we bail early
+      return;
+    }
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle user state update and redirection
+      await signInWithPopup(firebaseAuthService, firebaseGoogleProvider);
+      // onAuthStateChanged will handle user state update and setLoading(false)
     } catch (error) {
       console.error("Error signing in with Google: ", error);
-      setLoading(false);
+      setLoading(false); // Explicitly set loading to false on error
     }
   };
 
   const signOut = async () => {
+    if (!firebaseAuthService) {
+      console.error("Firebase auth service not available for sign-out.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      await firebaseSignOut(auth);
+      await firebaseSignOut(firebaseAuthService);
       router.push('/login');
+      // onAuthStateChanged will set user to null and setLoading(false)
     } catch (error) {
       console.error("Error signing out: ", error);
-      setLoading(false);
+      setLoading(false); // Explicitly set loading to false on error
     }
   };
 
@@ -61,7 +86,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    console.error("useAuth error: AuthContext is undefined. This typically means AuthProvider is not an ancestor, or it crashed before rendering its Provider component.");
+    throw new Error('useAuth must be used within an AuthProvider. Check for errors during Firebase initialization or AuthProvider rendering.');
   }
   return context;
 };

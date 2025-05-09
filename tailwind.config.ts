@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
     darkMode: ["class"],
@@ -10,8 +11,8 @@ export default {
   theme: {
   	extend: {
   		fontFamily: {
-        sans: ['var(--font-geist-sans)'],
-        mono: ['var(--font-geist-mono)'],
+        sans: ['var(--font-sans)', ...defaultTheme.fontFamily.sans],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', ...defaultTheme.fontFamily.mono],
       },
   		colors: {
   			background: 'hsl(var(--background))',

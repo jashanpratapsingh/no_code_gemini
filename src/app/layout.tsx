@@ -1,23 +1,26 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter as FontSans } from 'next/font/google';
+// Removed LocalFont import as Geist fonts are being removed
 import './globals.css';
+import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/Header';
+import { Toaster } from '@/components/ui/toaster';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const fontSans = FontSans({
   subsets: ['latin'],
+  variable: '--font-sans', // Inter will use --font-sans
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+// Removed geistSans and geistMono definitions as the font files are missing
 
 export const metadata: Metadata = {
   title: 'PromptCoder',
   description: 'Generate code from prompts with AI',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -27,10 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
+      <body className={cn('min-h-screen bg-background font-sans antialiased', fontSans.variable)}>
         <AuthProvider>
           <Header />
-          <main>{children}</main>
+          <main className="flex-1">{children}</main>
           <Toaster />
         </AuthProvider>
       </body>
